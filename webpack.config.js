@@ -25,6 +25,11 @@ module.exports = [
         },
         resolve: {
             extensions: ['*', '.js', '.jsx'],
+            fallback: {
+                crypto: require.resolve('crypto-browserify'),
+                stream: require.resolve('stream-browserify'),
+                vm: require.resolve('vm-browserify'),
+            },
         },
         output: {
             path: path.resolve(__dirname, 'dist/frontend'),
@@ -45,7 +50,6 @@ module.exports = [
                     target: 'http://localhost:3000',
                 },
             ],
-            // required for app to display in zoom client, these values are only suitable for development
             headers: {
                 'Content-Security-Policy':
                     "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:",
@@ -79,6 +83,12 @@ module.exports = [
                     },
                 },
             ],
+        },
+        resolve: {
+            fallback: {
+                fs: false,
+                path: false,
+            },
         },
         output: {
             path: path.resolve(__dirname, 'dist/server'),

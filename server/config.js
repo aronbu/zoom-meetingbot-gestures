@@ -12,6 +12,7 @@ const validateEnv = (name, val) => {
 validateEnv('ZM_CLIENT_ID', process.env.ZM_CLIENT_ID);
 validateEnv('ZM_CLIENT_SECRET', process.env.ZM_CLIENT_SECRET);
 validateEnv('PUBLIC_URL', process.env.PUBLIC_URL);
+validateEnv('WEBHOOK_URL', process.env.WEBHOOK_URL);
 validateEnv('SESSION_SECRET', process.env.SESSION_SECRET);
 
 if (hasMissing) throw new Error('Missing required .env values...exiting');
@@ -28,6 +29,7 @@ export const zoomApp = {
     clientSecret: process.env.ZM_CLIENT_SECRET,
     redirectUrl: `${process.env.PUBLIC_URL}/auth`,
     publicUrl: process.env.PUBLIC_URL,
+    webhookUrl: process.env.WEBHOOK_URL,
     sessionSecret: process.env.SESSION_SECRET,
     recallApiToken: process.env.RECALL_API_TOKEN,
     anthropicApiToken: process.env.ANTHROPIC_API_TOKEN,

@@ -57,18 +57,22 @@ router.post('/start-recording', session, async (req, res, next) => {
         const bot = await recallFetch('/api/v1/bot', {
             method: 'POST',
             body: JSON.stringify({
-                bot_name: `${process.env.BOT_NAME} Notetaker`,
+                bot_name: `${process.env.BOT_NAME}`,
                 meeting_url: req.body.meetingUrl,
-                transcription_options: {
-                    provider: 'default',
+                /*transcription_options: {
+                    provider: 'meeting_captions',
                 },
                 real_time_transcription: {
                     destination_url: `${zoomApp.publicUrl}/webhook/transcription?secret=${zoomApp.webhookSecret}`,
                     partial_results: true,
-                },
+                },*/
+                recording_mode: 'gallery_view',
                 zoom: {
                     request_recording_permission_on_host_join: true,
                     require_recording_permission: true,
+                },
+                real_time_media: {
+                    websocket_video_destination_url: `wss://${zoomApp.webhookUrl}`,
                 },
                 /* Uncomment this to enable the bot to display an image.
                 automatic_video_output: {
