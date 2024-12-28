@@ -1,8 +1,11 @@
+// webpack.config.js
 const path = require('path');
 const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const NodemonWebpackPlugin = require('nodemon-webpack-plugin');
 const DotenvPlugin = require('dotenv-webpack');
+// ADD:
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = [
     {
@@ -84,12 +87,26 @@ module.exports = [
                 },
             ],
         },
+        /*
+          For server side with tfjs-node, typically you do NOT want to polyfill
+          core node modules (like fs) to false. Because @tensorflow/tfjs-node
+          will read files from disk to load the model.
+          Remove or comment out if it conflicts with model loading:
+        */
         resolve: {
             fallback: {
-                fs: false,
-                path: false,
+                // Keep these commented if @tensorflow/tfjs-node or 'sharp' need them:
+                // fs: false,
+                // path: false,
             },
         },
+        externals: [
+            nodeExternals({
+                // If there's something you DO want to bundle from node_modules,
+                // put it in allowlist: [/^@someorg\/somepackage/]
+                allowlist: [],
+            }),
+        ],
         output: {
             path: path.resolve(__dirname, 'dist/server'),
             filename: 'bundle.js',
