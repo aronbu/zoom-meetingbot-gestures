@@ -20,7 +20,7 @@
     "@zoom/appssdk": "^0.16.8",
     "assert": "^2.1.0",
     "aws-sdk": "^2.1692.0",
-    "axios": "^1.7.7",
+    "axios": "^1.7.9",
     "buffer": "^6.0.3",
     "bufferutil": "^4.0.8",
     "canvas": "^2.11.2",
