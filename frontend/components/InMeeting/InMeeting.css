@@ -19,7 +19,6 @@
 }
 
 .InMeeting button {
-    margin: 0 auto;
     padding: 0.5rem 1rem;
     border: 1px solid #4192a8;
     border-radius: 0.25rem;
@@ -29,6 +28,7 @@
     font-weight: 300;
     cursor: pointer;
     width: 100%;
+    margin: 0 auto 1rem;
 }
 
 .InMeeting button:disabled {

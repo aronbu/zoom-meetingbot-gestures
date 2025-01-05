@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import './InMeeting.css';
-import Transcript from './Transcript/Transcript.js';
+
 import zoomSdk from '@zoom/appssdk';
 import appFetch from '../../helpers/fetch';
-import Summary from './Summary/Summary';
 
 function InMeeting() {
     const [recordingState, setRecordingState] = useState('stopped');
-    const [transcript, setTranscript] = useState([]);
+    const [gestureData, setGestureData] = useState({
+        thumbsUp: 0,
+        thumbsDown: 0,
+    });
+    const [isGestureDetectionActive, setIsGestureDetectionActive] =
+        useState(false);
 
     const toggleRecording = async () => {
         if (recordingState === 'stopped') {
@@ -20,7 +24,6 @@ function InMeeting() {
     const startRecording = async () => {
         setRecordingState('starting');
 
-        // @see https://appssdk.zoom.us/types/ZoomSdkTypes.GetMeetingJoinUrlResponse.html
         const meetingUrl = await zoomSdk.getMeetingJoinUrl();
         const res = await appFetch('/api/start-recording', {
             method: 'POST',
@@ -61,7 +64,7 @@ function InMeeting() {
             return;
         }
 
-        const { state, transcript } = await res.json();
+        const { state } = await res.json();
 
         if (state === 'in_call_not_recording') {
             setRecordingState('waiting');
@@ -77,8 +80,20 @@ function InMeeting() {
         } else if (state === 'done') {
             setRecordingState('stopped');
         }
+    };
 
-        setTranscript(transcript);
+    const handleStartStopGestureDetection = async () => {
+        try {
+            console.log('Toggling gesture detection');
+            const res = await appFetch('/webhook/toggle-gesture-detection', {
+                method: 'POST',
+            });
+            const data = await res.json();
+            setGestureData(data);
+            setIsGestureDetectionActive(!isGestureDetectionActive);
+        } catch (error) {
+            console.error('Error toggling gesture detection:', error);
+        }
     };
 
     useEffect(() => {
@@ -87,46 +102,53 @@ function InMeeting() {
 
     useEffect(() => {
         const interval = setInterval(refreshState, 2000);
-
         return () => clearInterval(interval);
     }, [recordingState]);
 
     return (
         <div className="InMeeting">
             <header>
-                <h1>Your Notetaker</h1>
+                <h1>Gesture detection app</h1>
             </header>
-
-            <h3>Meeting Transcript</h3>
-            <Transcript transcript={transcript} />
-
             <div className="InMeeting-record">
                 <button
                     onClick={toggleRecording}
-                    disabled={[
-                        'starting',
-                        'bot-joining',
-                        'waiting',
-                        'stopping',
-                        'bot-leaving',
-                        'error',
-                    ].includes(recordingState)}
+                    disabled={
+                        [
+                            'starting',
+                            'bot-joining',
+                            'waiting',
+                            'stopping',
+                            'bot-leaving',
+                            'error',
+                            'recording',
+                        ].includes(recordingState) || isGestureDetectionActive
+                    }
                 >
-                    {recordingState === 'stopped' && 'Start Recording'}
-                    {recordingState === 'recording' && 'Stop Recording'}
-                    {(recordingState === 'starting' ||
-                        recordingState === 'bot-joining') &&
-                        'Starting...'}
-                    {(recordingState === 'stopping' ||
-                        recordingState === 'bot-leaving') &&
-                        'Stopping...'}
+                    {recordingState === 'stopped' && 'Let the meeting bot join'}
+                    {recordingState === 'recording' && 'Stop the meeting bot'}
+                    {recordingState === 'starting' && 'Starting...'}
+                    {recordingState === 'stopping' && 'Stopping...'}
                     {recordingState === 'waiting' &&
                         'Waiting for permission...'}
                     {recordingState === 'error' && 'An error occurred'}
+                    {recordingState === 'bot-joining' && 'Starting...'}
+                    {recordingState === 'bot-leaving' && 'Stopping...'}
                 </button>
-            </div>
 
-            <Summary transcript={transcript} />
+                <button
+                    onClick={handleStartStopGestureDetection}
+                    disabled={recordingState !== 'recording'}
+                >
+                    {isGestureDetectionActive
+                        ? 'Stop Gesture Detection'
+                        : 'Start Gesture Detection'}
+                </button>
+                <div>
+                    <p>Thumbs Up: {gestureData.thumbsUp}</p>
+                    <p>Thumbs Down: {gestureData.thumbsDown}</p>
+                </div>
+            </div>
         </div>
     );
 }
