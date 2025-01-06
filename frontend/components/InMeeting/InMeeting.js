@@ -121,7 +121,6 @@ function InMeeting() {
                             'stopping',
                             'bot-leaving',
                             'error',
-                            'recording',
                         ].includes(recordingState) || isGestureDetectionActive
                     }
                 >
