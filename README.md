@@ -4,12 +4,6 @@
 - Node.js 
   - 18.17.1
 - npm
-- NVIDIA® GPU drivers 
-  - 450.x or higher
-- Cuda toolkit 
-  - 11.2
-- cuDNN
-  - 8.1.0
 ### Installation
 clone this repo
 
