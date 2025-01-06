@@ -5,8 +5,6 @@ import { recallFetch } from '../helpers/recall.js';
 
 import session from '../session.js';
 import { zoomApp } from '../config.js';
-import db from '../helpers/database.js';
-import { anthropicFetch } from '../helpers/anthropic.js';
 
 const router = express.Router();
 
@@ -59,13 +57,6 @@ router.post('/start-recording', session, async (req, res, next) => {
             body: JSON.stringify({
                 bot_name: `${process.env.BOT_NAME}`,
                 meeting_url: req.body.meetingUrl,
-                /*transcription_options: {
-                    provider: 'meeting_captions',
-                },
-                real_time_transcription: {
-                    destination_url: `${zoomApp.publicUrl}/webhook/transcription?secret=${zoomApp.webhookSecret}`,
-                    partial_results: true,
-                },*/
                 recording_mode: 'gallery_view',
                 zoom: {
                     request_recording_permission_on_host_join: true,
@@ -74,32 +65,6 @@ router.post('/start-recording', session, async (req, res, next) => {
                 real_time_media: {
                     websocket_video_destination_url: `wss://${zoomApp.webhookUrl}`,
                 },
-                /* Uncomment this to enable the bot to display an image.
-                automatic_video_output: {
-                    in_call_recording: {
-                      kind: 'jpeg',
-                      b64_data: 'YOUR-BASE64-JPEG-GOES-HERE'
-                    }
-                },
-                */
-                /* Uncomment this to enable the bot to play audio.
-                automatic_audio_output: {
-                    in_call_recording: {
-                      data: {
-                        kind: 'mp3',
-                        b64_data: 'YOUR-BASE64-MP3-GOES-HERE'
-                      }
-                    }
-                },
-                */
-                /* Uncomment this to make the bot send a chat message.
-                chat: {
-                    on_bot_join: {
-                      send_to: 'everyone',
-                      message: 'Hello world'
-                    }
-                },
-                */
             }),
         });
 
@@ -158,80 +123,6 @@ router.get('/recording-state', session, async (req, res, next) => {
 
         return res.json({
             state: latestStatus,
-            transcript: db.transcripts[botId] || [],
-        });
-    } catch (e) {
-        next(handleError(e));
-    }
-});
-
-const PROMPTS = {
-    _template: `
-Human: You are a virtual assistant, and you are taking notes for a meeting. 
-You are diligent, polite and slightly humerous at times.
-Human: Here is the a transcript of the meeting, including the speaker's name:
-
-Human: <transcript>
-{{transcript}}
-Human: </transcript>
-
-Human: Only answer the following question directly, do not add any additional comments or information.
-Human: {{prompt}}
-
-Assistant:`,
-    general_summary: 'Can you summarize the meeting? Please be concise.',
-    action_items: 'What are the action items from the meeting?',
-    decisions: 'What decisions were made in the meeting?',
-    next_steps: 'What are the next steps?',
-    key_takeaways: 'What are the key takeaways?',
-};
-
-/*
- * Gets a summary of the transcript using Anthropic's Claude model.
- */
-router.post('/summarize', session, async (req, res, next) => {
-    try {
-        sanitize(req);
-        validateAppContext(req);
-
-        const botId = req.session.botId;
-        const prompt = PROMPTS[req.body.prompt];
-
-        if (!botId) {
-            return res.status(400).json({ error: 'Missing botId' });
-        }
-
-        if (!prompt) {
-            return res.status(400).json({ error: 'Missing prompt' });
-        }
-
-        const transcript = db.transcripts[botId] || [];
-        const finalTranscript = transcript
-            .filter((utterance) => utterance.is_final)
-            .map(
-                (utterance) =>
-                    `Human: ${utterance.speaker || 'Unknown'}: ${utterance.words
-                        .map((w) => w.text)
-                        .join(' ')}`
-            )
-            .join('\n');
-        const completePrompt = PROMPTS._template
-            .replace('{{transcript}}', finalTranscript)
-            .replace('{{prompt}}', prompt);
-
-        console.log('completePrompt', completePrompt);
-
-        const data = await anthropicFetch('/v1/complete', {
-            method: 'POST',
-            body: JSON.stringify({
-                model: 'claude-2',
-                prompt: completePrompt,
-                max_tokens_to_sample: 1024,
-            }),
-        });
-
-        return res.json({
-            summary: data.completion,
         });
     } catch (e) {
         next(handleError(e));
